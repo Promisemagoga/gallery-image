@@ -10,17 +10,11 @@ export default function App() {
     <NavigationContainer>
 
     <StackNavigator/>
-  {/* <View style={styles.container}>
-   <Jonurnal/>
-  </View> */}
+ 
   </NavigationContainer>
 
 
 
-    // <View style={styles.container}>
-    // <Home/>
-    //   <StatusBar style="auto" />
-    // </View>
   );
 }
 

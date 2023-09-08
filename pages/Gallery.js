@@ -5,6 +5,8 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { useNavigation } from '@react-navigation/native';
 
 export default function Gallery() {
+    const navigation = useNavigation()
+
     const [pictures, setPictures] = useState([])
     const db = SQLite.openDatabase('photos.db');
 
@@ -38,6 +40,7 @@ export default function Gallery() {
             tx.executeSql('DELETE FROM photos WHERE id = ?', [itemId], (tx, results) => {
                 if (results.rowsAffected > 0) {
                     console.log('Item deleted successfully');
+                   navigation.navigate('Home')
                 } else {
                     console.log('Item not found');
                 }
@@ -45,7 +48,6 @@ export default function Gallery() {
         })
     }
 
-    const navigation = useNavigation()
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.topContainer}>
@@ -69,6 +71,7 @@ export default function Gallery() {
                                 <TouchableOpacity onPress={() => deleteFun(pic.id)}>
                                     <MaterialCommunityIcons name='delete' size={30} color={"white"} style={styles.delete} />
                                 </TouchableOpacity>
+                                <Text style={styles.city}>{pic.city}</Text>
                             </ImageBackground>
 
                         </View>
@@ -116,5 +119,12 @@ const styles = StyleSheet.create({
     delete: {
         padding: 5,
         marginLeft: "auto"
+    },
+
+    city:{
+        marginTop: "auto",
+        color: "#fff",
+        fontSize: 25
+        
     }
 })

@@ -9,11 +9,11 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 
 
 //connecting tio an sql database
-const db = SQLite.openDatabase( 'photos.db');
+const db = SQLite.openDatabase('photos.db');
 
 export default function Home() {
     const [hasPermission, setHasPermision] = useState(null);
-    // const [locationPermission, setLocationPermision] = useState(null)
+    const [locationPermission, setLocationPermision] = useState(null)
     const [type, setType] = useState(Camera.Constants.Type.back)
     const [camera, setCamera] = useState(null);
     const [image, setImage] = useState(null);
@@ -31,12 +31,21 @@ export default function Home() {
         })();
     }, [])
 
-    useEffect(() => {
-        (async () => {
-            const { status } = await Location.requestForegroundPermissionsAsync();
-            hasPermission(status === 'granted')
-        })
-    })
+    // useEffect(() => {
+    //     (async () => {
+    //         const { status } = await Location.requestForegroundPermissionsAsync();
+    //         setLocationPermision(status === 'granted')
+    //     })
+    // }, [])
+
+    // useEffect(() => {
+    //     db.transaction(tx => {
+    //         tx.executeSql('DROP TABLE IF EXISTS photos', [], (tx, results) => {
+    //             console.log('Table deleted successfully');
+    //         })
+    //     }
+    //     )
+    // }, [])
 
 
     //it allows you to take pictures and save it's url to setImage
@@ -44,26 +53,28 @@ export default function Home() {
         if (camera) {
             const photo = await camera.takePictureAsync()
             const { status } = await Location.requestForegroundPermissionsAsync();
-            if (status === 'granted') {
-                const location = await Location.getCurrentPositionAsync();
-                const { latitude, longitude } = location.coords;
+            let location = await Location.getCurrentPositionAsync({});
+            let { latitude, longitude } = location.coords;
+            let geocode = await Location.reverseGeocodeAsync({ latitude, longitude })
+            let city = geocode[0].city
+            if(status === "granted"){
                 db.transaction((tx) => {
                     tx.executeSql(
-                        'CREATE TABLE IF NOT EXISTS photos(id INTEGER PRIMARY KEY AUTOINCREMENT, uri TEXT)'
+                        'CREATE TABLE IF NOT EXISTS photos(id INTEGER PRIMARY KEY AUTOINCREMENT, uri TEXT, city TEXT, latitude REAL, longitude REAL)'
                     )
                 }, (err) => console.log({ errInCreate: err }), (result) => console.log({ resultInCreate: result }))
-
+    
                 db.transaction((tx) => {
                     tx.executeSql(
-                        'INSERT INTO photos (uri) VALUES (?)',
-                        [photo.uri],
+                        'INSERT INTO photos (uri, city, latitude, longitude) VALUES (?, ?, ?, ?)',
+                        [photo.uri, city, latitude, longitude],
                     )
                 }, (err) => console.log({ errInInsert: err }), (res) => {
                     console.log({ resInInsert: res })
                 })
                 setImage(photo.uri)
-                setPictures("")
             }
+        
 
         }
 
@@ -88,15 +99,15 @@ export default function Home() {
     if (hasPermission === false) {
         return <Text>No access to camera</Text>;
     }
-    
+
 
     const navigation = useNavigation()
 
     return (
         <SafeAreaView style={styles.container}>
-             <View style={styles.topContainer}>
+            <View style={styles.topContainer}>
                 <TouchableOpacity>
-            
+
                     <MaterialCommunityIcons name='flash-off' size={30} color={"#fff"} />
 
                 </TouchableOpacity>
@@ -115,7 +126,7 @@ export default function Home() {
                     ratio={'1:1'}
                 />
             </View>
-            {image && <Image source={{ uri: image }} style={{ width: 300, height: 300 }} />}
+            {/* {image && <Image source={{ uri: image }} style={{ width: 300, height: 300 }} />} */}
             {
                 pictures.length > 0 &&
                 <View style={{ zIndex: 1000, backgroundColor: 'red', width: Dimensions.get('window').width, height: 500 }}>
@@ -198,8 +209,8 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         padding: 10
     }
-,
-    topContainer:{
+    ,
+    topContainer: {
         marginTop: 100,
         width: "100%",
         flexDirection: 'row',
